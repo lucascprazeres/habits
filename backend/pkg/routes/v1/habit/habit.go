@@ -2,8 +2,7 @@ package habit
 
 import (
 	"github.com/gin-gonic/gin"
-	"habits/internal/database"
-	habitsRepository "habits/internal/database/repositories/habit"
+	"github.com/google/uuid"
 	habitsSchema "habits/internal/schemas/habit"
 	habitsService "habits/internal/services/habit"
 	"net/http"
@@ -12,10 +11,10 @@ import (
 var service habitsService.Service
 
 func Register(router *gin.RouterGroup) {
-	router.POST("", createHabit)
+	service = habitsService.NewService()
 
-	repository := habitsRepository.NewRepository(database.DB)
-	service = habitsService.NewService(repository)
+	router.POST("", createHabit)
+	router.PATCH(":id/toggle", toggleHabit)
 }
 
 func createHabit(c *gin.Context) {
@@ -31,4 +30,21 @@ func createHabit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, result)
+}
+
+func toggleHabit(c *gin.Context) {
+	i := c.Param("id")
+	id, err := uuid.Parse(i)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	habit, err := service.Toggle(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, habit)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"habits/internal/database/models"
 	"habits/internal/settings"
 )
 
@@ -17,6 +18,11 @@ func Connect() error {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn))
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(models.Habit{}, models.Day{}, models.DayHabit{}, models.HabitWeekDay{})
 	if err != nil {
 		return err
 	}
